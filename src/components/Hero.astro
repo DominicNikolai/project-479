@@ -1,0 +1,92 @@
+<div id="canvas-container"></div>
+
+<style>
+body{margin:0;overflow:hidden;background:#000}
+#canvas-container{position:fixed;inset:0}
+canvas{display:block}
+</style>
+
+<script>
+import{Scene,FogExp2,PerspectiveCamera,WebGLRenderer,BufferGeometry,Float32BufferAttribute,PointsMaterial,AdditiveBlending,Points,Clock}from'three'
+
+const COUNT=15000
+const SIZE=.15
+const scene=new Scene()
+scene.fog=new FogExp2(0x000000,.02)
+
+const camera=new PerspectiveCamera(75,innerWidth/innerHeight,.1,1000)
+camera.position.z=30
+
+const renderer=new WebGLRenderer({antialias:true,alpha:true})
+renderer.setSize(innerWidth,innerHeight)
+document.getElementById('canvas-container').appendChild(renderer.domElement)
+
+const positions=new Float32Array(COUNT*3)
+const targets=new Float32Array(COUNT*3)
+const colors=new Float32Array(COUNT*3)
+
+for(let i=0;i<COUNT;i++){
+const i3=i*3
+positions[i3]=(Math.random()-.5)*20
+positions[i3+1]=(Math.random()-.5)*20
+positions[i3+2]=(Math.random()-.5)*20
+targets[i3]=(Math.random()-.5)*20
+targets[i3+1]=(Math.random()-.5)*20
+targets[i3+2]=(Math.random()-.5)*20
+colors[i3]=0
+colors[i3+1]=1
+colors[i3+2]=1
+}
+
+const geometry=new BufferGeometry()
+geometry.setAttribute('position',new Float32BufferAttribute(positions,3))
+geometry.setAttribute('color',new Float32BufferAttribute(colors,3))
+
+const material=new PointsMaterial({
+size:SIZE,
+vertexColors:true,
+blending:AdditiveBlending,
+transparent:true,
+depthWrite:false,
+opacity:.8
+})
+
+const cube=new Points(geometry,material)
+scene.add(cube)
+
+let rx=0,ry=0
+let tx=0,ty=0
+
+addEventListener('mousemove',e=>{
+tx=(e.clientY/innerHeight-.5)*Math.PI*2
+ty=(e.clientX/innerWidth-.5)*Math.PI*2
+})
+
+addEventListener('resize',()=>{
+camera.aspect=innerWidth/innerHeight
+camera.updateProjectionMatrix()
+renderer.setSize(innerWidth,innerHeight)
+})
+
+const clock=new Clock()
+
+function animate(){
+requestAnimationFrame(animate)
+const t=clock.getElapsedTime()
+rx+=(tx-rx)*.05
+ry+=(ty-ry)*.05
+cube.rotation.x=rx
+cube.rotation.y=ry
+const p=geometry.attributes.position.array
+for(let i=0;i<COUNT;i++){
+const i3=i*3
+p[i3]+=((targets[i3]+Math.sin(t+i)*.5)-p[i3])*.04
+p[i3+1]+=((targets[i3+1]+Math.cos(t+i*.3)*.5)-p[i3+1])*.04
+p[i3+2]+=(targets[i3+2]-p[i3+2])*.04
+}
+geometry.attributes.position.needsUpdate=true
+renderer.render(scene,camera)
+}
+
+animate()
+</script>
