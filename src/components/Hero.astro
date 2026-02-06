@@ -39,7 +39,8 @@
 
   const renderer = new WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(innerWidth, innerHeight);
-  document.getElementById('canvas-container').appendChild(renderer.domElement);
+  const canvas = document.getElementById('canvas-container') as HTMLCanvasElement;
+  canvas.appendChild(renderer.domElement);
 
   const positions = new Float32Array(COUNT * 3);
   const targets = new Float32Array(COUNT * 3);
